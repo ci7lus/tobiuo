@@ -1,0 +1,28 @@
+extends _layout
+
+block content
+    section(class="section")
+      div(class="container")
+        h1(class="title") tobiuo
+        if account
+            div
+                if (subscriptions.length == 0)
+                    p 登録されていません。
+                else
+                    table(class="table is-fullwidth")
+                        thead
+                            tr
+                                th(width="10%") id
+                                th(width="70%") URI
+                                th(width="20%") 
+
+                        tbody
+                            each subscription in subscriptions
+                                tr
+                                    th #{subscription.id}
+                                    th #{subscription.description}
+                                    th
+                                        a(disabled=true) delete
+            a(href="/register") 登録する
+        else
+            a(href="/user/login") ログイン

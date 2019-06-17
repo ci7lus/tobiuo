@@ -1,0 +1,13 @@
+extends _layout
+
+block content
+    section(class="section")
+      div(class="container")
+          h1(class="title") 登録
+          form(action="/register", method="post")
+            div(class="field")
+                p(class="control")
+                input(class="input" type="text", name="uri" placeholder="https://discordapp.com/api/webhooks/.../...")
+            div(class="field")
+                p(class="control")
+                button(class="button is-primary" type="submit") 登録
