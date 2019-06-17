@@ -1,0 +1,26 @@
+{
+    "version": 2,
+    "name": "tobiuo",
+    "routes": [{
+        "src": "/(.*)",
+        "dest": "src/index.ts"
+    }],
+    "builds": [{
+        "src": "src/**/*.ts",
+        "use": "@now/node@canary",
+        "config": {
+            "maxLambdaSize": "25mb"
+        }
+    }, {
+        "src": "src/**/*.pug",
+        "use": "@now/static"
+    }],
+    "env": {
+        "IS_NOW": "true",
+        "ENDPOINT": "@tobiuo-endpoint",
+        "SECRET_KEY": "@tobiuo-secret-key",
+        "BRANCA_KEY": "@tobiuo-branca-key",
+        "CLIENT_ID": "@tobiuo-client-id",
+        "CLIENT_SECRET": "@tobiuo-secret"
+    }
+}
