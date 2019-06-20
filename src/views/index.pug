@@ -1,6 +1,15 @@
 extends _layout
 
 block content
+    style(type='text/css').
+        .table {
+            table-layout: fixed;
+        }
+        .table td, .table th {
+            overflow: hidden;
+            white-space: pre;
+            text-overflow: text-overflow;
+        }
     section(class="section")
       div(class="container")
         h1(class="title") tobiuo
@@ -19,10 +28,18 @@ block content
                         tbody
                             each subscription in subscriptions
                                 tr
-                                    th #{subscription.id}
-                                    th #{subscription.description}
-                                    th
-                                        a(disabled=true) delete
-            a(href="/register") 登録する
+                                    td(width="10%") #{subscription.id}
+                                    td(width="70%") #{subscription.description}
+                                    td(width="20%") 
+                                        a(href=`${subscription.id}`) detail
+            hr
+            h2(class="subtitle") 登録
+            form(action="/", method="post")
+                div(class="field")
+                    p(class="control")
+                    input(class="input" type="text", name="uri" placeholder="Slack / Discord Webhook URI")
+                div(class="field")
+                    p(class="control")
+                    button(class="button is-primary" type="submit") 登録
         else
             a(href="/user/login") ログイン

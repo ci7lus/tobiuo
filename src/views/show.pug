@@ -1,0 +1,34 @@
+extends _layout
+
+block content
+    style(type='text/css').
+        .table {
+            table-layout: fixed;
+        }
+        .table td, .table th {
+            overflow: hidden;
+            white-space: pre;
+            text-overflow: text-overflow;
+        }
+    section(class="section")
+      div(class="container")
+        h2(class="subtitle") 詳細
+        table(class="table is-fullwidth")
+            tbody
+                    tr
+                        th(width="20%") id
+                        td(width="80%") #{subscription.id}
+                    tr
+                        th(width="20%") uri
+                        td(width="80%") #{subscription.description}
+                    tr
+                        th(width="20%") createdAt
+                        td(width="80%") #{subscription.createdAt}
+                    tr
+                        th(width="20%") updatedAt
+                        td(width="80%") #{subscription.updatedAt}
+                    tr
+                        th(width="20%") failedAt
+                        td(width="80%") #{subscription.failedAt}
+
+        a(class="button is-primary" href=`/${subscription.id}?delete=1`) 削除
