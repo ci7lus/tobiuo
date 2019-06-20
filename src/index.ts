@@ -86,12 +86,7 @@ router.get("/user/login", async ctx => {
     }
 })
 
-router.get("/register", async ctx => {
-    if (!ctx.session.token) ctx.throw(401, "ログインしてないじゃん")
-    await ctx.render("register", { account: ctx.session.account })
-})
-
-router.post("/register", body(), async ctx => {
+router.post("/", body(), async ctx => {
     if (!ctx.session.token) ctx.throw(401, "ログインしてないじゃん")
     if (!ctx.request.body.uri) ctx.throw(400, "uriないけど")
     const subscriptionsReq = await Axios.get(new URL(urljoin(endpoint, "/api/v1/webpush/subscriptions")).href, {
@@ -101,9 +96,16 @@ router.post("/register", body(), async ctx => {
     })
     const uri: string = await (async () => {
         const request = ctx.request.body.uri.trim()
-        if (/https\:\/\/discordapp.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9-_]+/.exec(request)) {
-            const check = await Axios.get(request)
-            const urig = `https://discordapp.com/api/webhooks/${check.data.id}/${check.data.token}`
+        let exc
+        if ((exc = /https\:\/\/discordapp.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9-_]+/.exec(request))) {
+            const check = await Axios.get(exc[0])
+            const urig = `https://discordapp.com/api/webhooks/${check.data.id}/${check.data.token}/slack`
+            if (subscriptionsReq.data.filter((subscription: any) => subscription.description == urig).length)
+                return ctx.throw(400, "既に登録済みっぽい")
+            return urig
+        } else if ((exc = /https\:\/\/hooks.slack.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[A-Za-z0-9]+/.exec(request))) {
+            const urig = exc[0]
+            const check = await Axios.post(urig, { text: "Hello, world." })
             if (subscriptionsReq.data.filter((subscription: any) => subscription.description == urig).length)
                 return ctx.throw(400, "既に登録済みっぽい")
             return urig
@@ -117,7 +119,6 @@ router.post("/register", body(), async ctx => {
         const payload = JSON.stringify({
             uri: uri,
             privateKey: vapidKeys.privateKey,
-            publicKey: vapidKeys.publicKey,
             auth: authKey,
         })
         return urljoin(ctx.origin, `/push/${branc.encode(payload)}`)
@@ -139,25 +140,61 @@ router.post("/register", body(), async ctx => {
     await ctx.redirect("/")
 })
 
+router.get("/:id", async ctx => {
+    if (!ctx.session.token) ctx.throw(401, "ログインしてないじゃん")
+    const id = parseInt(ctx.params.id)
+    if (isNaN(id)) ctx.throw(400, "不正")
+    const subscriptionsReq = await Axios.get(new URL(urljoin(endpoint, "/api/v1/webpush/subscriptions")).href, {
+        headers: {
+            Authorization: `Bearer ${ctx.session.token}`,
+        },
+    })
+    const subscriptionFil = subscriptionsReq.data.filter((subscription: any) => subscription.id == id)
+    if (!subscriptionFil.length) {
+        ctx.throw(404, "みつかりませんでした。")
+    }
+    const subscription = subscriptionFil[0]
+    if (ctx.query.delete == "1") {
+        await Axios.delete(new URL(urljoin(endpoint, `/api/v1/webpush/subscriptions/${id}`)).href, {
+            headers: {
+                Authorization: `Bearer ${ctx.session.token}`,
+            },
+        })
+        ctx.status = 204
+        ctx.redirect("/")
+    } else {
+        await ctx.render("show", { account: ctx.session.account, subscription: subscription })
+    }
+})
+
 router.post("/push/:token", async ctx => {
     if (ctx.request.headers["content-encoding"] != "aes128gcm") ctx.throw(400, "content-encoding != aes128gcm")
     const body = await new Promise<Buffer>(resolve => ctx.req.pipe(concatStream(resolve)))
     const metadata = JSON.parse(branc.decode(ctx.params.token).toString())
     const curve = crypto.createECDH("prime256v1")
     curve.setPrivateKey(Buffer.from(metadata.privateKey, "base64"))
+    const publicKey = curve.getPublicKey().toString("base64")
     const data = ece.decrypt(body, {
         version: "aes128gcm",
         privateKey: curve,
-        dh: metadata.publicKey,
+        dh: publicKey,
         authSecret: metadata.auth,
     })
     const parsed = JSON.parse(data.toString())
     switch (parsed.type) {
         case "mention":
             await Axios.post(metadata.uri, {
-                content: parsed.post.text,
-                username: `${parsed.post.user.name} (${parsed.post.user.screenName})`,
-                avatar_url: parsed.post.user.icon,
+                icon_url: parsed.post.user.icon,
+                username: `${parsed.post.user.screenName} `,
+                fallback: parsed.post.text,
+                attachments: [
+                    {
+                        author_name: parsed.post.user.name,
+                        author_icon: parsed.post.user.icon,
+                        text: parsed.post.text,
+                        footer: `via ${parsed.post.application.name}`,
+                    },
+                ],
             })
             break
     }
