@@ -1,5 +1,6 @@
 import crypto from "crypto"
 import { URL } from "url"
+import $ from "transform-ts"
 import Koa from "koa"
 import body from "koa-body"
 import Router from "koa-router"
@@ -12,14 +13,14 @@ import concatStream from "concat-stream"
 // @ts-ignore
 import ece from "http_ece"
 // @ts-ignore
-import branca from "branca"
+import Branca from "branca"
 
-const endpoint: string = process.env.ENDPOINT!
-const secretKey: string = process.env.SECRET_KEY!
-const clientId: string = process.env.CLIENT_ID!
-const clientSecret: string = process.env.CLIENT_SECRET!
-const brancaKey: string = process.env.BRANCA_KEY!
-const branc = branca(brancaKey)
+const endpoint = $.string.transformOrThrow(process.env.ENDPOINT)
+const secretKey = $.string.transformOrThrow(process.env.SECRET_KEY)
+const clientId = $.string.transformOrThrow(process.env.CLIENT_ID)
+const clientSecret = $.string.transformOrThrow(process.env.CLIENT_SECRET)
+const brancaKey = $.string.transformOrThrow(process.env.BRANCA_KEY)
+const branca = Branca(brancaKey)
 
 const app = new Koa()
 const router = new Router<any, any>()
@@ -121,7 +122,7 @@ router.post("/", body(), async ctx => {
             privateKey: vapidKeys.privateKey,
             auth: authKey,
         })
-        return urljoin(ctx.origin, `/push/${branc.encode(payload)}`)
+        return urljoin(ctx.origin, `/push/${branca.encode(payload)}`)
     })()
     const payload = {
         endpoint: subscribeUri,
@@ -170,7 +171,7 @@ router.get("/:id", async ctx => {
 router.post("/push/:token", async ctx => {
     if (ctx.request.headers["content-encoding"] != "aes128gcm") ctx.throw(400, "content-encoding != aes128gcm")
     const body = await new Promise<Buffer>(resolve => ctx.req.pipe(concatStream(resolve)))
-    const metadata = JSON.parse(branc.decode(ctx.params.token).toString())
+    const metadata = JSON.parse(branca.decode(ctx.params.token).toString())
     const curve = crypto.createECDH("prime256v1")
     curve.setPrivateKey(Buffer.from(metadata.privateKey, "base64"))
     const publicKey = curve.getPublicKey().toString("base64")
