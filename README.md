@@ -17,7 +17,10 @@ Web-Push subscribe proxy for [sea](https://github.com/rinsuki/sea)
 
 ## Usage
 
-`yarn instlal && yarn start`
+```sh
+yarn
+yarn start
+```
 
 ## Env
 
