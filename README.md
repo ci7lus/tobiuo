@@ -6,15 +6,6 @@ Web-Push subscribe proxy for [sea](https://github.com/rinsuki/sea)
 
 [Web-Push を実装した](https://github.com/rinsuki/sea/pull/48)ので端末で購読したかったが iOS ではサポートされていないので、それをサーバーサイドで受け取って Slack / Discord の Webhook に変換してしまうことにした。<br>
 
-### 主に用いているもの
-
--   KoaJS
--   Pug
--   TypeScript
--   Web-Push (+eec)
--   BrancaToken
--   zeit/now
-
 ## Usage
 
 ```sh
