@@ -32,7 +32,8 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "lint": "prettier --check './src/**/*.ts'"
+    "lint": "prettier --check './src/**/*.ts'",
+    "format": "prettier --write './src/**/*.ts'"
   },
   "private": true
 }
